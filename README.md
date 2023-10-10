@@ -2,7 +2,13 @@
 
 Simple code to train encoder-only masked language models (like BERT) on GPUs.
 
-I am reimplementing [Geiping et al. 2022](https://arxiv.org/abs/2212.14034) (*Cramming: Training a Language Model on a Single GPU in One Day) using [jax](https://jax.readthedocs.io/en/latest/index.html).
+I am reimplementing [Geiping et al. 2022](https://arxiv.org/abs/2212.14034) (*Cramming: Training a Language Model on a Single GPU in One Day*) using [JAX](https://jax.readthedocs.io/en/latest/index.html) and [Equinox](https://docs.kidger.site/equinox/).
+
+The goal is to better understand BERT-pretraining from scratch.
+1 step of the baseline takes around 1 second.
+I'm training for 100K steps by default, 100K / 60 s/min / 60 min/hr = 28 hours.
+With that in mind, I hope to start a new job every day on an A6000, introducing changes one by one.
+
 
 ## Install
 
@@ -18,11 +24,12 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 
 ## To Do
 
+* [ ] Add a final layernorm to stabilize training
 * [ ] Disable linear layer biases
 * [ ] Disable QKV biases
+* [ ] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
 * [ ] Switch to gated linear unit
 * [ ] Couple the input/output embeddings
-* [ ] Add a final layernorm to stabilize training
 * [ ] Gradient accumulation
 * [ ] Learning rate scheduler
 * [ ] Weight decay
@@ -30,3 +37,4 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [ ] Adam betas and epsilon
 * [x] Logging
 * [ ] Checkpointing
+* [ ] Larger batch size
