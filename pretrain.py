@@ -23,8 +23,8 @@ cfg = helpers.DotDict(
     train_steps=200_000,
     eval_steps=32,
     eval_every=1000,
-    lr=3e-4,
-    batch_size=224,
+    lr=1e-4,
+    batch_size=64,
     # General
     seed=0,
     log_every=10,
@@ -32,8 +32,8 @@ cfg = helpers.DotDict(
 
 model_cfg = bert.Config(
     vocab_size=50258,
-    max_length=256,
-    n_embd=128,
+    max_length=512,
+    n_embd=768,
     n_layers=12,
     n_heads=12,
     dropout=0.0,  # only one pass through data
@@ -96,6 +96,14 @@ def main():
     # Set up model
     model_key, _ = jax.random.split(key)
     model = bert.Transformer(model_cfg, key=model_key)
+
+    # Count params
+    def count(module):
+        params = eqx.filter(module, eqx.is_array)
+        return sum(x.size for x in jax.tree_util.tree_leaves(params))
+    n_params = count(model) - count(model.wte) - count(model.wpe)
+    logger.info(json.dumps(dict(n_params=helpers.human(n_params))))
+    wandb.config.n_params = n_params
 
     optim = optax.adamw(cfg.lr)
     opt_state = optim.init(eqx.filter(model, eqx.is_inexact_array))
