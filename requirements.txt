@@ -1,0 +1,10 @@
+jax[cuda12_pip]
+equinox
+jaxtyping
+einops
+optax
+tiktoken
+datasets
+tqdm
+numpy
+wandb
