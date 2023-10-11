@@ -23,11 +23,11 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 ## To Do
 
 * [x] Logging
-* [ ] Tag different versions with git.
-* [ ] Add a final layernorm to stabilize training
+* [x] Tag different versions with git.
+* [x] Add a final layernorm to stabilize training
+* [x] Disable linear layer biases
+* [x] Disable QKV biases
 * [ ] Checkpointing
-* [ ] Disable linear layer biases
-* [ ] Disable QKV biases
 * [ ] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
 * [ ] Switch to gated linear unit
 * [ ] Couple the input/output embeddings

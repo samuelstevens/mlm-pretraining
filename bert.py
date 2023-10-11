@@ -28,7 +28,14 @@ class Block(eqx.Module):
 
         self.ln1 = eqx.nn.LayerNorm(cfg.n_embd)
         self.mhsa = eqx.nn.MultiheadAttention(
-            cfg.n_heads, cfg.n_embd, dropout_p=cfg.dropout, key=mhsa_key
+            cfg.n_heads,
+            cfg.n_embd,
+            dropout_p=cfg.dropout,
+            key=mhsa_key,
+            use_query_bias=False,
+            use_key_bias=False,
+            use_value_bias=False,
+            use_output_bias=False,
         )
 
         self.ln2 = eqx.nn.LayerNorm(cfg.n_embd)
@@ -41,6 +48,8 @@ class Block(eqx.Module):
             width_size=hidden_dim,
             depth=1,
             activation=ft.partial(jax.nn.gelu, approximate=True),
+            use_bias=False,
+            use_final_bias=False,
             key=mlp_key,
         )
 
@@ -61,6 +70,7 @@ class Transformer(eqx.Module):
     wpe: eqx.nn.Embedding
     layers: eqx.nn.Sequential
     head: eqx.nn.Linear
+    ln: eqx.nn.LayerNorm
 
     def __init__(self, cfg, *, key: jax.random.PRNGKey):
         wte_key, wpe_key, head_key, *layer_key = jax.random.split(
@@ -69,7 +79,10 @@ class Transformer(eqx.Module):
         self.wte = eqx.nn.Embedding(cfg.vocab_size, cfg.n_embd, key=wte_key)
         self.wpe = eqx.nn.Embedding(cfg.max_length, cfg.n_embd, key=wpe_key)
         self.layers = eqx.nn.Sequential([Block(cfg, key=key) for key in layer_key])
-        self.head = eqx.nn.Linear(cfg.n_embd, cfg.vocab_size, key=head_key)
+        self.ln = eqx.nn.LayerNorm(cfg.n_embd)
+        self.head = eqx.nn.Linear(
+            cfg.n_embd, cfg.vocab_size, use_bias=False, key=head_key
+        )
 
     def __call__(self, toks, *, dropout=False, key=None):
         pos = jnp.arange(0, toks.shape[0])
@@ -80,6 +93,7 @@ class Transformer(eqx.Module):
 
         x = self.layers(emb)
 
+        x = jax.vmap(self.ln)(x)
         x = jax.vmap(self.head)(x)
 
         return x
