@@ -8,8 +8,6 @@ The goal is to better understand BERT-pretraining from scratch.
 1 step of the baseline takes around 1 second.
 I'm training for 100K steps by default, 100K / 60 s/min / 60 min/hr = 28 hours.
 With that in mind, I hope to start a new job every day on an A6000, introducing changes one by one.
-
-
 ## Install
 
 I used CUDA 12.2 on my lab's Nvidia A6000 GPUs:
@@ -24,7 +22,10 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 
 ## To Do
 
+* [x] Logging
+* [ ] Tag different versions with git.
 * [ ] Add a final layernorm to stabilize training
+* [ ] Checkpointing
 * [ ] Disable linear layer biases
 * [ ] Disable QKV biases
 * [ ] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
@@ -35,6 +36,3 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [ ] Weight decay
 * [ ] Gradient clipping
 * [ ] Adam betas and epsilon
-* [x] Logging
-* [ ] Checkpointing
-* [ ] Larger batch size
