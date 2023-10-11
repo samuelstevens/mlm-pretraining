@@ -1,3 +1,23 @@
+import dataclasses
+import json
+import os
+
+import equinox as eqx
+
+
+def save(filename, model_cfg, model):
+    cfg_dct = dataclasses.asdict(model_cfg)
+    cfg_dct["model"] = "bert"
+
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    with open(f"{filename}-hparams.json", "w") as fd:
+        json.dump(cfg_dct, fd)
+
+    with open(f"{filename}-model.bin", "wb") as fd:
+        eqx.tree_serialise_leaves(fd, model)
+
+
 class DotDict(dict):
     def __getattr__(self, attr):
         if attr in self:

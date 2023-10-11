@@ -3,4 +3,4 @@ lint: fmt
 
 fmt:
 	fd -e py | xargs isort
-	fd -e py | xargs black --quiet
+	fd -e py | xargs black

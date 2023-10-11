@@ -28,6 +28,8 @@ cfg = helpers.DotDict(
     # General
     seed=0,
     log_every=10,
+    save_every=50_000,
+    ckpt_root="/local/scratch/stevens.994/mlm",
 )
 
 model_cfg = bert.Config(
@@ -148,15 +150,20 @@ def main():
             val_loss = val(model, val_dataloader)
             metrics.update({"val/loss": val_loss.item()})
 
+        if step % cfg.save_every == 0:
+            helpers.save(f"{cfg.ckpt_root}/{run.id}/step{step}", model_cfg, model)
+
         if metrics:
             logger.info(json.dumps(metrics))
             wandb.log(metrics)
+
+    helpers.save(f"{cfg.ckpt_root}/{run.id}/step{step}", model_cfg, model)
 
 
 if __name__ == "__main__":
     start = 0
 
-    wandb.init(
+    run = wandb.init(
         project="mlm-cramming",
         entity="samuelstevens",
         config=cfg,
