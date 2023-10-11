@@ -101,6 +101,7 @@ def main():
     def count(module):
         params = eqx.filter(module, eqx.is_array)
         return sum(x.size for x in jax.tree_util.tree_leaves(params))
+
     n_params = count(model) - count(model.wte) - count(model.wpe)
     logger.info(json.dumps(dict(n_params=helpers.human(n_params))))
     wandb.config.n_params = n_params
