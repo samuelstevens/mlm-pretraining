@@ -29,6 +29,7 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [x] Disable QKV biases
 * [x] Checkpointing
 * [x] Stop after 24 hours
+* [x] Track FLOP utilization
 * [ ] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
 * [ ] Switch to gated linear unit
 * [ ] Couple the input/output embeddings

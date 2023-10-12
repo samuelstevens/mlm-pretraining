@@ -38,10 +38,9 @@ class Block(eqx.Module):
             use_output_bias=False,
         )
 
-        self.ln2 = eqx.nn.LayerNorm(cfg.n_embd)
-
         hidden_dim = int(4 * cfg.n_embd)
 
+        self.ln2 = eqx.nn.LayerNorm(cfg.n_embd)
         self.mlp = eqx.nn.MLP(
             in_size=cfg.n_embd,
             out_size=cfg.n_embd,
@@ -97,6 +96,14 @@ class Transformer(eqx.Module):
         x = jax.vmap(self.head)(x)
 
         return x
+
+    @property
+    def n_params(self):
+        def count(module):
+            params = eqx.filter(module, eqx.is_array)
+            return sum(x.size for x in jax.tree_util.tree_leaves(params))
+
+        return count(self) - count(self.wte) - count(self.wpe)
 
 
 def get_enc():

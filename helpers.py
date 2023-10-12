@@ -30,7 +30,7 @@ def human(num):
 
     num = abs(num)
 
-    for i, suffix in [(1e9, "B"), (1e6, "M"), (1e3, "K")]:
+    for i, suffix in [(1e12, "T"), (1e9, "B"), (1e6, "M"), (1e3, "K")]:
         if num > i:
             return f"{prefix}{num / i:.1f}{suffix}"
 

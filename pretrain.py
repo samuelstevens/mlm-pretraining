@@ -102,14 +102,8 @@ def main():
     model_key, _ = jax.random.split(key)
     model = bert.Transformer(model_cfg, key=model_key)
 
-    # Count params
-    def count(module):
-        params = eqx.filter(module, eqx.is_array)
-        return sum(x.size for x in jax.tree_util.tree_leaves(params))
-
-    n_params = count(model) - count(model.wte) - count(model.wpe)
-    logger.info(json.dumps(dict(n_params=helpers.human(n_params))))
-    wandb.config.n_params = n_params
+    logger.info(json.dumps(dict(n_params=helpers.human(model.n_params))))
+    wandb.config.n_params = model.n_params
 
     optim = optax.adamw(cfg.lr)
     opt_state = optim.init(eqx.filter(model, eqx.is_inexact_array))
@@ -134,20 +128,28 @@ def main():
         model = eqx.apply_updates(model, updates)
         return loss, model, opt_state
 
+    flops_per_iter = 0
+    flops_promised = 38.7e12  # 38.7 TFLOPS for fp16 on A6000
+
     for step, (x, y, masks) in zip(range(start, cfg.train_steps), train_dataloader):
+        t0 = time.time()
         loss, model, opt_state = make_step(model, x, y, masks, opt_state)
+        t1 = time.time()
 
         metrics = {}
 
         if step % cfg.log_every == 0:
-            metrics.update(
-                {
-                    "perf/step": step,
-                    "perf/toks": (step + 1) * cfg.batch_size * model_cfg.max_length,
-                    "train/loss": loss.item(),
-                    "train/lr": cfg.lr,
-                }
-            )
+            train_metrics = {
+                "perf/step": step,
+                "perf/toks": (step + 1) * cfg.batch_size * model_cfg.max_length,
+                "train/loss": loss.item(),
+                "train/lr": cfg.lr,
+            }
+            metrics.update(train_metrics)
+
+            dt = t1 - t0
+            flops_achieved = flops_per_iter * (1.0 / dt)
+            metrics["perf/util"] = flops_achieved / flops_promised
 
             # Check if we should stop training (hours)
             elapsed = time.time() - start_time
@@ -166,6 +168,14 @@ def main():
             logger.info(json.dumps(metrics))
             wandb.log(metrics)
             metrics = {}
+
+        if step == 10:
+            # Calculate flops one time after a couple iterations.
+            flops_per_iter = (
+                make_step.lower(model, x, y, masks, opt_state)
+                .compile()
+                .compiled.cost_analysis()[0]["flops"]
+            )
 
     helpers.save(f"{cfg.ckpt_root}/{run.id}/step{step}", model_cfg, model)
     if metrics:
