@@ -1,10 +1,9 @@
 jax[cuda12_pip]
 equinox
-jaxtyping
-einops
-optax
-tiktoken
 datasets
+tiktoken
+optax
+git+https://github.com/deepmind/jmp
 tqdm
 numpy
 wandb

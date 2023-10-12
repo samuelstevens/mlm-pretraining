@@ -30,7 +30,7 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [x] Checkpointing
 * [x] Stop after 24 hours
 * [x] Track FLOP utilization
-* [ ] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
+* [x] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
 * [ ] Switch to gated linear unit
 * [ ] Couple the input/output embeddings
 * [ ] Gradient accumulation
@@ -40,3 +40,8 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [ ] Adam betas and epsilon
 * [ ] Resuming from checkpoint. See the [Equinox docs](https://docs.kidger.site/equinox/examples/serialisation/) for how to load models.
 * [ ] Evaluating on downstream tasks
+
+## Out of Scope
+
+* Multi-GPU parallelism
+

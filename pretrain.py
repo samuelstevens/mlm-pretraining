@@ -5,6 +5,7 @@ import time
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import jmp
 import numpy as np
 import optax
 
@@ -13,6 +14,7 @@ import helpers
 import wandb
 
 sec_per_hr = 60 * 60
+
 log_format = "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
 logger = logging.getLogger("pretrain")
@@ -27,6 +29,7 @@ cfg = helpers.DotDict(
     eval_every=1000,
     lr=1e-4,
     batch_size=64,
+    mp="params=float32,compute=bfloat16,output=float32",
     # General
     seed=0,
     log_every=10,
@@ -108,6 +111,8 @@ def main():
     optim = optax.adamw(cfg.lr)
     opt_state = optim.init(eqx.filter(model, eqx.is_inexact_array))
 
+    policy = jmp.get_policy(cfg.mp)
+
     train_dataloader = DataLoader(
         cfg, model_cfg.max_length, "train", cfg.mask_rate, rng=rng
     )
@@ -117,7 +122,9 @@ def main():
 
     @eqx.filter_value_and_grad
     def compute_loss(model, x, y, masks):
+        x, model = policy.cast_to_compute((x, model))
         logits = jax.vmap(model)(x)
+        x = policy.cast_to_output(x)
         losses = optax.softmax_cross_entropy_with_integer_labels(logits, y)
         return jnp.sum(losses * masks) / masks.sum()
 
