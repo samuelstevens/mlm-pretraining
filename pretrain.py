@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 import equinox as eqx
 import jax
@@ -11,6 +12,7 @@ import bert
 import helpers
 import wandb
 
+sec_per_hr = 60 * 60
 log_format = "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
 logger = logging.getLogger("pretrain")
@@ -30,6 +32,7 @@ cfg = helpers.DotDict(
     log_every=10,
     save_every=50_000,
     ckpt_root="/local/scratch/stevens.994/mlm",
+    max_hrs=24,
 )
 
 model_cfg = bert.Config(
@@ -146,6 +149,12 @@ def main():
                 }
             )
 
+            # Check if we should stop training (hours)
+            elapsed = time.time() - start_time
+            if elapsed > cfg.max_hrs * sec_per_hr:
+                logger.info("Stopping training after %.1f hours.", elapsed / sec_per_hr)
+                break
+
         if step % cfg.eval_every == 0:
             val_loss = val(model, val_dataloader)
             metrics.update({"val/loss": val_loss.item()})
@@ -156,12 +165,17 @@ def main():
         if metrics:
             logger.info(json.dumps(metrics))
             wandb.log(metrics)
+            metrics = {}
 
     helpers.save(f"{cfg.ckpt_root}/{run.id}/step{step}", model_cfg, model)
+    if metrics:
+        logger.info(json.dumps(metrics))
+        wandb.log(metrics)
 
 
 if __name__ == "__main__":
     start = 0
+    start_time = time.time()
 
     run = wandb.init(
         project="mlm-cramming",

@@ -28,6 +28,7 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [x] Disable linear layer biases
 * [x] Disable QKV biases
 * [x] Checkpointing
+* [x] Stop after 24 hours
 * [ ] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
 * [ ] Switch to gated linear unit
 * [ ] Couple the input/output embeddings
@@ -38,4 +39,3 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [ ] Adam betas and epsilon
 * [ ] Resuming from checkpoint. See the [Equinox docs](https://docs.kidger.site/equinox/examples/serialisation/) for how to load models.
 * [ ] Evaluating on downstream tasks
-* [ ] Stop after 24 hours
