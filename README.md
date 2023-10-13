@@ -16,6 +16,12 @@ I used CUDA 12.2 on my lab's Nvidia A6000 GPUs:
 pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
 
+## Run
+
+```sh
+XLA_PYTHON_CLIENT_MEM_FRACTION=.99 CUDA_VISIBLE_DEVICES=1 python pretrain.py
+```
+
 ## Data
 
 I am using openwebtext, downloaded using Huggingface's datasets libary.
@@ -31,17 +37,17 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [x] Stop after 24 hours
 * [x] Track FLOP utilization
 * [x] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
-* [ ] Switch to gated linear unit
-* [ ] Couple the input/output embeddings
-* [ ] Gradient accumulation
+  * Might need loss scaling
+* [x] Gradient accumulation
 * [ ] Learning rate scheduler
 * [ ] Weight decay
 * [ ] Gradient clipping
 * [ ] Adam betas and epsilon
+* [ ] Switch to gated linear unit
+* [ ] Couple the input/output embeddings
 * [ ] Resuming from checkpoint. See the [Equinox docs](https://docs.kidger.site/equinox/examples/serialisation/) for how to load models.
 * [ ] Evaluating on downstream tasks
 
 ## Out of Scope
 
 * Multi-GPU parallelism
-

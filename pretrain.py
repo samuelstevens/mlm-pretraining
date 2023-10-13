@@ -27,8 +27,9 @@ cfg = helpers.DotDict(
     train_steps=200_000,
     eval_steps=32,
     eval_every=1000,
-    lr=1e-4,
-    batch_size=64,
+    lr=5e-4,
+    batch_size=128,
+    grad_accumulation_steps=32,
     mp="params=float32,compute=bfloat16,output=float32",
     # General
     seed=0,
@@ -109,6 +110,7 @@ def main():
     wandb.config.n_params = model.n_params
 
     optim = optax.adamw(cfg.lr)
+    optim = optax.MultiSteps(optim, every_k_schedule=cfg.grad_accumulation_steps)
     opt_state = optim.init(eqx.filter(model, eqx.is_inexact_array))
 
     policy = jmp.get_policy(cfg.mp)
@@ -131,7 +133,9 @@ def main():
     @eqx.filter_jit
     def make_step(model, x, y, masks, opt_state):
         loss, grads = compute_loss(model, x, y, masks)
-        updates, opt_state = optim.update(grads, opt_state, params=model)
+        updates, opt_state = optim.update(
+            grads, opt_state, params=eqx.filter(model, eqx.is_inexact_array)
+        )
         model = eqx.apply_updates(model, updates)
         return loss, model, opt_state
 
@@ -149,6 +153,8 @@ def main():
             train_metrics = {
                 "perf/step": step,
                 "perf/toks": (step + 1) * cfg.batch_size * model_cfg.max_length,
+                "train/microbatch-step": step,
+                "train/step": step // cfg.grad_accumulation_steps,
                 "train/loss": loss.item(),
                 "train/lr": cfg.lr,
             }
