@@ -28,15 +28,15 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 
 ## To Do
 
-* [x] Learning rate scheduler
-* [x] Weight decay
-* [x] Gradient clipping
-* [x] Adam betas and epsilon
 * [ ] Switch to gated linear unit
 * [ ] Couple the input/output embeddings
 * [ ] Resuming from checkpoint. See the [Equinox docs](https://docs.kidger.site/equinox/examples/serialisation/) for how to load models.
 * [ ] Evaluating on downstream tasks
 * [ ] Log gradient norm
+* [x] Learning rate scheduler
+* [x] Weight decay
+* [x] Gradient clipping
+* [x] Adam betas and epsilon
 * [x] Logging
 * [x] Tag different versions with git.
 * [x] Add a final layernorm to stabilize training
