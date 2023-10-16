@@ -24,19 +24,28 @@ cfg = helpers.DotDict(
     data_root="/local/scratch/openwebtext",
     mask_rate=0.2,
     # Train
-    train_steps=200_000,
+    train_steps=100_000,
     eval_steps=32,
     eval_every=1000,
-    lr=5e-4,
     batch_size=128,
-    grad_accumulation_steps=32,
+    grad_accum_steps=32,
     mp="params=float32,compute=bfloat16,output=float32",
+    optim=helpers.DotDict(
+        name="adamw",
+        lr_schedule="one_cycle",
+        max_lr=1e-3,
+        b1=0.9,
+        b2=0.98,
+        eps=1e-12,  # this seems really small
+        clip=0.5,
+        wd=0.01,  # multiplied by LR in optax
+    ),
     # General
     seed=0,
     log_every=10,
     save_every=50_000,
     ckpt_root="/local/scratch/stevens.994/mlm",
-    max_hrs=24,
+    max_hrs=48,
 )
 
 model_cfg = bert.Config(
@@ -86,6 +95,21 @@ class DataLoader:
             yield x, y, idx
 
 
+def make_one_cycle_fn(cfg):
+    """Creates learning rate schedule."""
+    steps = cfg.train_steps // cfg.grad_accum_steps // 2
+    warmup_fn = optax.linear_schedule(
+        init_value=0.0, end_value=cfg.optim.max_lr, transition_steps=steps
+    )
+    decay_fn = optax.linear_schedule(
+        init_value=cfg.optim.max_lr, end_value=0.0, transition_steps=steps
+    )
+    schedule_fn = optax.join_schedules(
+        schedules=[warmup_fn, decay_fn], boundaries=[steps]
+    )
+    return schedule_fn
+
+
 def val(model, dataloader):
     @eqx.filter_jit
     def compute_loss(model, x, y, masks):
@@ -109,8 +133,17 @@ def main():
     logger.info(json.dumps(dict(n_params=helpers.human(model.n_params))))
     wandb.config.n_params = model.n_params
 
-    optim = optax.adamw(cfg.lr)
-    optim = optax.MultiSteps(optim, every_k_schedule=cfg.grad_accumulation_steps)
+    lr_sched = make_one_cycle_fn(cfg)
+    optim = optax.adamw(
+        lr_sched,
+        b1=cfg.optim.b1,
+        b2=cfg.optim.b2,
+        eps=cfg.optim.eps,
+        weight_decay=cfg.optim.wd,  # scaled by lr in optax
+    )
+    if cfg.optim.clip > 0:
+        optim = optax.chain(optim, optax.clip_by_global_norm(cfg.optim.clip))
+    optim = optax.MultiSteps(optim, every_k_schedule=cfg.grad_accum_steps)
     opt_state = optim.init(eqx.filter(model, eqx.is_inexact_array))
 
     policy = jmp.get_policy(cfg.mp)
@@ -154,9 +187,9 @@ def main():
                 "perf/step": step,
                 "perf/toks": (step + 1) * cfg.batch_size * model_cfg.max_length,
                 "train/microbatch-step": step,
-                "train/step": step // cfg.grad_accumulation_steps,
+                "train/step": step // cfg.grad_accum_steps,
                 "train/loss": loss.item(),
-                "train/lr": cfg.lr,
+                "train/lr": lr_sched(step // cfg.grad_accum_steps).item(),
             }
             metrics.update(train_metrics)
 
