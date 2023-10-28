@@ -1,13 +1,14 @@
 # smol-lang
 
-Simple code to train encoder-only masked language models (like BERT) on GPUs.
+Simple code to train transformer models (like BERT and GPT) on GPUs.
 
-I am reimplementing [Geiping et al. 2022](https://arxiv.org/abs/2212.14034) (*Cramming: Training a Language Model on a Single GPU in One Day*) using [JAX](https://jax.readthedocs.io/en/latest/index.html) and [Equinox](https://docs.kidger.site/equinox/).
+At first, I am reimplementing [Geiping et al. 2022](https://arxiv.org/abs/2212.14034) (*Cramming: Training a Language Model on a Single GPU in One Day*) using [JAX](https://jax.readthedocs.io/en/latest/index.html) and [Equinox](https://docs.kidger.site/equinox/).
 
 The goal is to better understand BERT-pretraining from scratch.
 1 step of the baseline takes around 1 second.
 I'm training for 100K steps by default, 100K / 60 s/min / 60 min/hr = 28 hours.
 With that in mind, I hope to start a new job every day on an A6000, introducing changes one by one.
+
 ## Install
 
 I used CUDA 12.2 on my lab's Nvidia A6000 GPUs:
@@ -48,7 +49,16 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 * [x] Mixed precision (see [jmp](https://github.com/google-deepmind/jmp) and [this Equinox issue](https://github.com/patrick-kidger/equinox/issues/221))
   * Might need loss scaling
 * [x] Gradient accumulation
+* [ ] Multi-GPU parallelism
 
-## Out of Scope
+## Long Term Plan
 
-* Multi-GPU parallelism
+1. Train BERT-style models.
+2. Evaluate BERT-style models on SuperGLUE and GLUE.
+3. Train GPT-style models (124M parameters or similar).
+4. Evaluate GPT-style models on SuperGLUE and GLUE.
+5. Train a vision encoder on iNat21.
+6. Train a soft mixture of experts on iNat21.
+7. (*Novel*) Train a soft mixture of experts GPT-style model.
+
+
