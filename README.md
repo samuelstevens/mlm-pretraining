@@ -61,4 +61,6 @@ I am using openwebtext, downloaded using Huggingface's datasets libary.
 6. Train a soft mixture of experts on iNat21.
 7. (*Novel*) Train a soft mixture of experts GPT-style model.
 
+## Papers to Read
 
+* [MosaicBERT](https://arxiv.org/abs/2312.17482) is a BERT with FlashAttention, ALiBi, Gated Linear Units, removed padded tokens, low precision LayerNorm, optimized vocab size,and other best-practces. They train a BERT-base in ~70 minutes on 8xA100 on C4.
